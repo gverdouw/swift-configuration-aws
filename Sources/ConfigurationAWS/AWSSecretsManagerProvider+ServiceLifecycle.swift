@@ -20,7 +20,7 @@ extension AWSSecretsManagerProvider: Service {
     
     public func run() async throws {
         guard let _pollingInterval else { return }
-        for try await _ in AsyncTimerSequence(interval: Duration.seconds(1), clock: .continuous).cancelOnGracefulShutdown() {
+        for try await _ in AsyncTimerSequence(interval: _pollingInterval, clock: .continuous).cancelOnGracefulShutdown() {
             do {
                 try await withThrowingDiscardingTaskGroup { taskGroup in
                     for prefetchSecretName in _prefetchSecretNames {

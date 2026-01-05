@@ -10,17 +10,18 @@ import Configuration
 import ServiceLifecycle
 import AsyncAlgorithms
 
-public struct AWSSecretsManagerProviderSnapshot: ConfigSnapshotProtocol {
+public struct AWSSecretsManagerProviderSnapshot: ConfigSnapshot {
     public let providerName: String = "AWSSecretsManagerProvider"
 
     var values: [String: [String: Sendable]]
-    
+
     public init(values: [String: [String: Sendable]]) {
         self.values = values
     }
 
     public func value(forKey key: Configuration.AbsoluteConfigKey, type: Configuration.ConfigType) throws -> Configuration.LookupResult {
-        let encodedKey = SeparatorKeyEncoder.dotSeparated.encode(key)
+        // Encode key using dot notation similar to JSONSnapshot
+        let encodedKey = key.components.joined(separator: ".")
 
         let keyComponents = key.components
         guard keyComponents.count >= 2 else {

@@ -30,7 +30,10 @@ public final class AWSSecretsManagerProvider: ConfigProvider, Sendable {
     }
     
     private let storage: Mutex<Storage>
-        
+
+    // Taken from https://github.com/apple/swift-configuration/blob/0.2.0/Sources/Configuration/Providers/Common/ReloadingFileProviderCore.swift
+    typealias AnySnapshot = AWSSecretsManagerProviderSnapshot
+
     let _pollingInterval: Duration?
     let _prefetchSecretNames: [String]
     
@@ -191,7 +194,7 @@ public final class AWSSecretsManagerProvider: ConfigProvider, Sendable {
     }
     
     // This is taken from https://github.com/apple/swift-configuration/blob/0.2.0/Sources/Configuration/Providers/Common/ReloadingFileProviderCore.swift
-    public func watchValue<Return>(forKey key: Configuration.AbsoluteConfigKey, type: Configuration.ConfigType, updatesHandler: (Configuration.ConfigUpdatesAsyncSequence<Result<Configuration.LookupResult, any Error>, Never>) async throws -> Return) async throws -> Return {
+    public func watchValue<Return: ~Copyable>(forKey key: Configuration.AbsoluteConfigKey, type: Configuration.ConfigType, updatesHandler: nonisolated(nonsending) (Configuration.ConfigUpdatesAsyncSequence<Result<Configuration.LookupResult, any Error>, Never>) async throws -> Return) async throws -> Return {
 
         let (stream, continuation) = AsyncStream<Result<LookupResult, any Error>>
             .makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -217,8 +220,10 @@ public final class AWSSecretsManagerProvider: ConfigProvider, Sendable {
     }
     
     // This is taken from https://github.com/apple/swift-configuration/blob/0.2.0/Sources/Configuration/Providers/Common/ReloadingFileProviderCore.swift
-    public func watchSnapshot<Return>(updatesHandler: (ConfigUpdatesAsyncSequence<any ConfigSnapshotProtocol, Never>) async throws -> Return) async throws -> Return {
-        let (stream, continuation) = AsyncStream<AWSSecretsManagerProviderSnapshot>.makeStream(bufferingPolicy: .bufferingNewest(1))
+    public func watchSnapshot<Return: ~Copyable>(
+        updatesHandler: nonisolated(nonsending) (ConfigUpdatesAsyncSequence<any ConfigSnapshot, Never>) async throws -> Return
+    ) async throws -> Return {
+        let (stream, continuation) = AsyncStream<AnySnapshot>.makeStream(bufferingPolicy: .bufferingNewest(1))
         let id = UUID()
 
         // Add watcher and get initial snapshot
@@ -238,7 +243,7 @@ public final class AWSSecretsManagerProvider: ConfigProvider, Sendable {
         return try await updatesHandler(.init(stream.map { $0 }))
     }
     
-    public func snapshot() -> any Configuration.ConfigSnapshotProtocol {
+    public func snapshot() -> any ConfigSnapshot {
         storage.withLock { $0.snapshot }
     }
 }
