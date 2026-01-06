@@ -62,7 +62,7 @@ public final class AWSSecretsManagerProvider: ConfigProvider, Sendable {
                     }
                     
                     guard let secretLookupDict = try? JSONSerialization.jsonObject(with: Data(secretValueLookup.utf8), options: []) as? [String: Sendable] else {
-                        return (prefetchSecretName, nil, nil)
+                        return (prefetchSecretName, [prefetchSecretName: secretValueLookup], nil)
                     }
                     return (prefetchSecretName, secretLookupDict, Date().timeIntervalSince1970)
                 }
