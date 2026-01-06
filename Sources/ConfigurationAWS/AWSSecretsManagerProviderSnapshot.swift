@@ -24,7 +24,7 @@ public struct AWSSecretsManagerProviderSnapshot: ConfigSnapshot {
         let encodedKey = key.components.joined(separator: ".")
 
         let keyComponents = key.components
-        guard keyComponents.count >= 2 else {
+        guard !keyComponents.isEmpty else {
             return LookupResult(encodedKey: encodedKey, value: nil)
         }
         let secretName = keyComponents[0]
